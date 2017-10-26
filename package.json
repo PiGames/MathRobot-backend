@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/index.js --exec babel-node"
+    "start": "nodemon --inspect src/index.js --exec babel-node"
   },
   "author": "",
   "license": "ISC",
@@ -16,7 +16,9 @@
     "eslint": "^4.9.0",
     "eslint-config-idiomatic": "^4.0.0",
     "express": "^4.16.2",
+    "lodash": "^4.17.4",
     "nodemon": "^1.12.1",
-    "socket.io": "^2.0.4"
+    "socket.io": "^2.0.4",
+    "socket.io-redis": "^5.2.0"
   }
 }
