@@ -5,6 +5,8 @@ const io = require( 'socket.io' )( server );
 
 const port = process.env.PORT || 4200;
 
+console.log( JSON.stringify( process.env ) );
+
 server.listen( port, () => {
   try {
     console.clear();
