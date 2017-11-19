@@ -16,6 +16,10 @@ io.on( 'connection', function( client ) {
 
   console.log( `Client connected with id ${client.id}` );
 
+  client.on( 'give name', ( username ) => {
+    client.username = username;
+  } );
+
   client.on( 'join room', joinRoom );
   client.on( 'evaluate', evaluateEquation );
 

@@ -30,8 +30,11 @@ export default function( data ) {
 
     equation.latex = data;
 
+    console.log( this.username );
+
     equation.user = {
       id: this.id,
+      username: this.username,
     };
 
     queue[ room ].push( equation );
