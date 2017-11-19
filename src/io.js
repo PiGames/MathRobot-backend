@@ -3,12 +3,14 @@ const express = require( 'express' );
 const app = express();
 const io = require( 'socket.io' )( server );
 
-server.listen( 4200, () => {
+const port = process.env.PORT || 4200;
+
+server.listen( port, () => {
   try {
     console.clear();
   } catch ( e ) {}
 
-  console.log( 'Serving server on localhost:4200' );
+  console.log( `Serving server on localhost:${port}` );
 } );
 
 export default io;
