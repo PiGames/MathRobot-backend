@@ -23,6 +23,11 @@ const nextStep = () => {
 
 export default function( data ) {
   const room = Object.keys( this.adapter.sids[ this.id ] ).filter( r => r !== this.id )[ 0 ];
+  i = 0;
+
+  if ( !queue[ room ] ) {
+    queue[ room ] = [];
+  }
 
   if ( queue[ room ].find( q => q.user.id === this.id ) === undefined ) {
     const equation = {};

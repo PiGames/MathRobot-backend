@@ -20,6 +20,8 @@ io.on( 'connection', function( client ) {
     client.username = username;
   } );
 
+
+  joinRoom.call( client, 'pi-1' );
   client.on( 'join room', joinRoom );
   client.on( 'evaluate', evaluateEquation );
 
