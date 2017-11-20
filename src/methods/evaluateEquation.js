@@ -1,29 +1,31 @@
 import io from '../io';
 import queue from '../queue';
 
-let i = 0;
 const steps = [ 'Reaching to 3', 'Reaching to square root', '...', 'Reading from display' ];
 
-const nextStep = () => {
-  if ( queue[ 'room-pi-1' ] && queue[ 'room-pi-1' ].length > 0 ) {
+const nextStep = ( room, i ) => {
+  if ( queue[ room ] && queue[ room ].length > 0 ) {
     if ( i <= steps.length - 1 ) {
-      io.to( 'room-pi-1' ).emit( 'robot step', steps[ i++ ] );
+      io.to( room ).emit( 'robot step', steps[ i ] );
 
-      setTimeout( nextStep, 2000 );
+      setTimeout( () => nextStep( room, i + 1 ), 2000 );
       return;
     }
 
-    queue[ 'room-pi-1' ].shift();
+    queue[ room ].shift();
 
-    io.to( 'room-pi-1' ).emit( 'robot done', { result: 46 } );
-    io.to( 'room-pi-1' ).emit( 'queue changed', queue[ 'room-pi-1' ] );
-    i = 0;
+    io.to( room ).emit( 'robot done', { result: 46 } );
+    io.to( room ).emit( 'queue changed', queue[ room ] );
+
+    if ( queue[ room ].length > 0 ) {
+      nextStep( room, 0 );
+    }
   }
 };
 
 export default function( data ) {
+  let i = 0;
   const room = Object.keys( this.adapter.sids[ this.id ] ).filter( r => r !== this.id )[ 0 ];
-  i = 0;
 
   if ( !queue[ room ] ) {
     queue[ room ] = [];
@@ -35,8 +37,6 @@ export default function( data ) {
 
     equation.latex = data;
 
-    console.log( this.username );
-
     equation.user = {
       id: this.id,
       username: this.username,
@@ -47,7 +47,9 @@ export default function( data ) {
     const rooms = Object.keys( this.adapter.sids[ this.id ] ).filter( r => r !== this.id );
     io.to( rooms ).emit( 'queue changed', queue[ rooms[ 0 ] ] );
 
-    nextStep();
+    if ( queue[ room ].indexOf( equation ) === 0 ) {
+      nextStep( room, i );
+    }
   } else {
     this.emit( 'evaluate error', 'already_submitted' );
   }
