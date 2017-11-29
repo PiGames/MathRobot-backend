@@ -17,7 +17,20 @@ io.on( 'connection', function( client ) {
   console.log( `Client connected with id ${client.id}` );
 
   client.on( 'give name', ( username ) => {
-    client.username = username;
+    let isUserWithUsername = false;
+    Object.keys( io.sockets.sockets ).forEach( key => {
+      const cl = io.sockets.sockets[ key ];
+      if ( cl.username === username ) {
+        isUserWithUsername = true;
+      }
+    } );
+
+    if ( !isUserWithUsername ) {
+      client.username = username;
+      client.emit( 'username given' );
+    } else {
+      client.emit( 'username error' );
+    }
   } );
 
 
