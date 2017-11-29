@@ -30,6 +30,7 @@ io.on( 'connection', function( client ) {
       client.emit( 'username given' );
     } else {
       client.emit( 'username error' );
+      console.log( `More than one user tried to cennect with username: ${ username }` );
     }
   } );
 
