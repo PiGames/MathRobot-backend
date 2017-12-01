@@ -1,18 +1,24 @@
 import path from 'path';
 // import redis from 'socket.io-redis';
 
-import io from './io';
+import { io, raspberry as raspberrySocket } from './io';
 import queue from './queue';
 import joinRoom from './methods/joinRoom';
-import evaluateEquation from './methods/evaluateEquation';
+import { evaluateEquation, nextStep } from './methods/evaluateEquation';
 import clearQueue from './methods/clearQueue';
+import { log } from 'util';
 
 // io.adapter( redis( { host: 'localhost', port: 6379 } ) );
+
+let raspberry;
+let frontend;
 
 io.on( 'connection', function( client ) {
   // client.on( 'disconnect', function( reason ) {
   //   console.log( `Client with id ${client.id} disconnect` );
   // } );
+
+  frontend = client;
 
   console.log( `Client connected with id ${client.id}` );
 
@@ -37,7 +43,28 @@ io.on( 'connection', function( client ) {
 
   joinRoom.call( client, 'pi-1' );
   client.on( 'join room', joinRoom );
-  client.on( 'evaluate', evaluateEquation );
+  client.on( 'evaluate', evaluateEquation.bind( client, raspberry ) );
 
   client.on( 'clear queue', clearQueue );
+
+} );
+
+
+raspberrySocket.on( 'connection', r => {
+  console.log( 'Raspberry connected' );
+
+  raspberry = r;
+
+  r.on( 'equation calculated', img => {
+    const room = 'room-pi-1';
+    io.to( room ).emit( 'robot done', img );
+
+    queue[ room ].shift();
+
+    io.to( room ).emit( 'queue changed', queue[ room ] );
+
+    if ( queue[ room ].length > 0 ) {
+      nextStep( room, 0 );
+    }
+  } );
 } );

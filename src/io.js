@@ -1,7 +1,7 @@
 const server = require( 'http' ).createServer( app );
 const express = require( 'express' );
 const app = express();
-const io = require( 'socket.io' )( server );
+const socket = require( 'socket.io' );
 
 const port = process.env.PORT || 4200;
 
@@ -13,4 +13,6 @@ server.listen( port, () => {
   console.log( `Serving server on localhost:${port}` );
 } );
 
-export default io;
+export const io = socket( server );
+
+export const raspberry = socket( server, { path: '/raspberry' } );
