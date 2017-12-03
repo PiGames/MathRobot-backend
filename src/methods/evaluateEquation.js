@@ -27,8 +27,6 @@ export const evaluateEquation = ( client, raspberry, equationValue ) => {
 
     frontend.emit( 'queue changed', queue );
 
-    console.log( queue.indexOf( equation ) );
-
     if ( queue.indexOf( equation ) === 0 ) {
       calculateEquation( raspberry );
     }

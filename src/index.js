@@ -5,7 +5,7 @@ import queue from './queue';
 let raspberry;
 
 frontend.on( 'connection', ( client ) => {
-  console.log( `Client connected with id ${client.id}` );
+  console.log( `Client connected with id ’${client.id}’` );
 
   client.on( 'give name', ( username ) => {
     let isUserWithUsername = false;
@@ -22,7 +22,7 @@ frontend.on( 'connection', ( client ) => {
       console.log( `Given username ’${ username }’ to user with id ’${ client.id }’` );
     } else {
       client.emit( 'username error' );
-      console.log( `More than one user tried to connect with username: ${ username }` );
+      console.log( `More than one user tried to connect with username: ’${ username }’` );
     }
 
     if ( raspberry ) {
@@ -37,6 +37,7 @@ rpi.on( 'connection', ( raspberryClient ) => {
   console.log( 'Raspberry connected' );
 
   raspberry.on( 'robot step', ( step ) => {
+    console.log( `Robot responded with step ’${step}’` );
     frontend.emit( 'robot step', step );
   } );
 
