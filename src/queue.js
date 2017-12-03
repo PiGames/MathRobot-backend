@@ -1,3 +1,3 @@
-const queue = {};
+const queue = [];
 
 export default queue;

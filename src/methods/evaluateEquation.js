@@ -1,49 +1,39 @@
-import { io } from '../io';
+import { frontend } from '../io.js';
 import queue from '../queue';
 
-const steps = [ 'Reaching to 3', 'Reaching to square root', '...', 'Reading from display' ];
+const hasUserAlreadySubmitted = ( client ) => {
+  return queue.find( q => q.user.id === client.id ) !== undefined;
+};
 
-export const nextStep = ( room, i ) => {
-  if ( queue[ room ] && queue[ room ].length > 0 ) {
-    if ( i <= steps.length - 1 ) {
-      io.to( room ).emit( 'robot step', steps[ i ] );
-
-      setTimeout( () => nextStep( room, i + 1 ), 2000 );
-      return;
-    }
+export const calculateEquation = ( raspberry ) => {
+  if ( queue.length > 0 ) {
+    console.log( 'Emmited ’evaluate equation’' );
+    raspberry.emit( 'evaluate equation', queue[ 0 ].mathml );
   }
 };
 
-export function evaluateEquation( raspberry, data ) {
-  let i = 0;
-  const room = Object.keys( this.adapter.sids[ this.id ] ).filter( r => r !== this.id )[ 0 ];
-
-  if ( !queue[ room ] ) {
-    queue[ room ] = [];
-  }
-
-  if ( queue[ room ].find( q => q.user.id === this.id ) === undefined ) {
+export const evaluateEquation = ( client, raspberry, equationValue ) => {
+  if ( !hasUserAlreadySubmitted( client ) ) {
+    console.log( `Started evaluating ’${ equationValue }’ from ’${ client.username }’` );
     const equation = {};
-    console.log( `Started evaluating ${ data }` );
 
-    raspberry.emit( 'equation incoming', data );
-
-    equation.latex = data;
-
+    equation.mathml = equationValue;
     equation.user = {
-      id: this.id,
-      username: this.username,
+      id: client.id,
+      username: client.username,
     };
 
-    queue[ room ].push( equation );
+    queue.push( equation );
 
-    const rooms = Object.keys( this.adapter.sids[ this.id ] ).filter( r => r !== this.id );
-    io.to( rooms ).emit( 'queue changed', queue[ rooms[ 0 ] ] );
+    frontend.emit( 'queue changed', queue );
 
-    if ( queue[ room ].indexOf( equation ) === 0 ) {
-      nextStep( room, i );
+    console.log( queue.indexOf( equation ) );
+
+    if ( queue.indexOf( equation ) === 0 ) {
+      calculateEquation( raspberry );
     }
   } else {
-    this.emit( 'evaluate error', 'already_submitted' );
+    console.log( `User ’${ client.username }’ tried to submit equation again` );
+    client.emit( 'evaluate error', 'already_submitted' );
   }
 };

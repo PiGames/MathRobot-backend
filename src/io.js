@@ -13,6 +13,6 @@ server.listen( port, () => {
   console.log( `Serving server on localhost:${port}` );
 } );
 
-export const io = socket( server );
+export const frontend = socket( server );
 
-export const raspberry = socket( server, { path: '/raspberry' } );
+export const rpi = socket( server, { path: '/raspberry' } );

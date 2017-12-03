@@ -1,31 +1,16 @@
-import path from 'path';
-// import redis from 'socket.io-redis';
-
-import { io, raspberry as raspberrySocket } from './io';
+import { frontend, rpi } from './io.js';
+import { evaluateEquation, calculateEquation } from './methods/evaluateEquation';
 import queue from './queue';
-import joinRoom from './methods/joinRoom';
-import { evaluateEquation, nextStep } from './methods/evaluateEquation';
-import clearQueue from './methods/clearQueue';
-import { log } from 'util';
-
-// io.adapter( redis( { host: 'localhost', port: 6379 } ) );
 
 let raspberry;
-let frontend;
 
-io.on( 'connection', function( client ) {
-  // client.on( 'disconnect', function( reason ) {
-  //   console.log( `Client with id ${client.id} disconnect` );
-  // } );
-
-  frontend = client;
-
+frontend.on( 'connection', ( client ) => {
   console.log( `Client connected with id ${client.id}` );
 
   client.on( 'give name', ( username ) => {
     let isUserWithUsername = false;
-    Object.keys( io.sockets.sockets ).forEach( key => {
-      const cl = io.sockets.sockets[ key ];
+    Object.keys( frontend.sockets.sockets ).forEach( key => {
+      const cl = frontend.sockets.sockets[ key ];
       if ( cl.username === username ) {
         isUserWithUsername = true;
       }
@@ -34,37 +19,34 @@ io.on( 'connection', function( client ) {
     if ( !isUserWithUsername ) {
       client.username = username;
       client.emit( 'username given' );
+      console.log( `Given username ’${ username }’ to user with id ’${ client.id }’` );
     } else {
       client.emit( 'username error' );
       console.log( `More than one user tried to connect with username: ${ username }` );
     }
+
+    if ( raspberry ) {
+      client.on( 'evaluate', ( data ) => evaluateEquation.call( null, client, raspberry, data ) );
+    }
   } );
-
-
-  joinRoom.call( client, 'pi-1' );
-  client.on( 'join room', joinRoom );
-  client.on( 'evaluate', evaluateEquation.bind( client, raspberry ) );
-
-  client.on( 'clear queue', clearQueue );
-
 } );
 
+rpi.on( 'connection', ( raspberryClient ) => {
+  raspberry = raspberryClient;
 
-raspberrySocket.on( 'connection', r => {
   console.log( 'Raspberry connected' );
 
-  raspberry = r;
+  raspberry.on( 'robot step', ( step ) => {
+    frontend.emit( 'robot step', step );
+  } );
 
-  r.on( 'equation calculated', img => {
-    const room = 'room-pi-1';
-    io.to( room ).emit( 'robot done', img );
+  raspberry.on( 'robot done', ( data ) => {
+    frontend.emit( 'robot done', data );
 
-    queue[ room ].shift();
+    const eq = queue.shift();
+    console.log( `Robot finished equation: ${eq.mathml}` );
 
-    io.to( room ).emit( 'queue changed', queue[ room ] );
-
-    if ( queue[ room ].length > 0 ) {
-      nextStep( room, 0 );
-    }
+    calculateEquation( raspberry );
+    frontend.emit( 'queue changed', queue );
   } );
 } );
