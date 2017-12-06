@@ -9,12 +9,14 @@ frontend.on( 'connection', ( client ) => {
 
   client.on( 'give name', ( username ) => {
     let isUserWithUsername = false;
-    Object.keys( frontend.sockets.sockets ).forEach( key => {
-      const cl = frontend.sockets.sockets[ key ];
-      if ( cl.username === username ) {
-        isUserWithUsername = true;
-      }
-    } );
+    if ( username !== '' ) {
+      Object.keys( frontend.sockets.sockets ).forEach( key => {
+        const cl = frontend.sockets.sockets[ key ];
+        if ( cl.username === username ) {
+          isUserWithUsername = true;
+        }
+      } );
+    }
 
     if ( !isUserWithUsername ) {
       client.username = username;
