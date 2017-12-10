@@ -1,6 +1,8 @@
 import { frontend } from '../io.js';
 import queue from '../queue';
 
+let hasError = false;
+
 const hasUserAlreadySubmitted = ( client ) => {
   return queue.find( q => q.user.id === client.id ) !== undefined;
 };
@@ -13,6 +15,15 @@ export const calculateEquation = ( raspberry ) => {
 };
 
 export const evaluateEquation = ( client, raspberry, equationValue ) => {
+  if ( hasError ) {
+    return;
+  }
+
+  if ( !raspberry ) {
+    client.emit( 'evaluate error' );
+    return false;
+  }
+
   if ( !hasUserAlreadySubmitted( client ) ) {
     console.log( `Started evaluating ’${ equationValue }’ from ’${ client.username }’` );
     const equation = {};
@@ -34,4 +45,14 @@ export const evaluateEquation = ( client, raspberry, equationValue ) => {
     console.log( `User ’${ client.username }’ tried to submit equation again` );
     client.emit( 'evaluate error', 'already_submitted' );
   }
+};
+
+export const breakQueue = ( client ) => {
+  client.emit( 'evaluate error' );
+  queue.shift();
+  hasError = true;
+};
+
+export const disableError = () => {
+  hasError = false;
 };

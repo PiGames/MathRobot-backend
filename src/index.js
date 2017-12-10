@@ -1,5 +1,5 @@
 import { frontend, rpi } from './io.js';
-import { evaluateEquation, calculateEquation } from './methods/evaluateEquation';
+import { evaluateEquation, calculateEquation, breakQueue } from './methods/evaluateEquation';
 import queue from './queue';
 
 let raspberry;
@@ -26,11 +26,9 @@ frontend.on( 'connection', ( client ) => {
       client.emit( 'username error' );
       console.log( `More than one user tried to connect with username: ’${ username }’` );
     }
-
-    if ( raspberry ) {
-      client.on( 'evaluate', ( data ) => evaluateEquation.call( null, client, raspberry, data ) );
-    }
   } );
+
+  client.on( 'evaluate', ( data ) => evaluateEquation.call( null, client, raspberry, data ) );
 } );
 
 rpi.on( 'connection', ( raspberryClient ) => {
@@ -51,5 +49,9 @@ rpi.on( 'connection', ( raspberryClient ) => {
 
     calculateEquation( raspberry );
     frontend.emit( 'queue changed', queue );
+  } );
+
+  rpi.on( 'arduino error', () => {
+    breakQueue( frontend, disableError );
   } );
 } );
