@@ -15,10 +15,6 @@ export const calculateEquation = ( raspberry ) => {
 };
 
 export const evaluateEquation = ( client, raspberry, equationValue ) => {
-  if ( hasError ) {
-    return;
-  }
-
   if ( !raspberry ) {
     client.emit( 'evaluate error' );
     return false;
