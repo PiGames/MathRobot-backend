@@ -7,6 +7,7 @@ let isRPiDead = true;
 
 frontend.on( 'connection', ( client ) => {
   console.log( `Client connected with id ’${client.id}’` );
+  client.emit( 'queue changed', queue );
 
   if ( isRPiDead ) {
     client.emit( 'service is down' );
