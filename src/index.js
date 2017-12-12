@@ -3,9 +3,16 @@ import { evaluateEquation, calculateEquation, breakQueue, disableError } from '.
 import queue from './queue';
 
 let raspberry;
+let isRPiDead = true;
 
 frontend.on( 'connection', ( client ) => {
   console.log( `Client connected with id ’${client.id}’` );
+
+  if ( isRPiDead ) {
+    client.emit( 'service is down' );
+  } else {
+    client.emit( 'service is up' );
+  }
 
   client.on( 'give name', ( username ) => {
     let isUserWithUsername = false;
@@ -28,11 +35,19 @@ frontend.on( 'connection', ( client ) => {
     }
   } );
 
-  client.on( 'evaluate', ( data ) => evaluateEquation.call( null, client, raspberry, data ) );
+  client.on( 'evaluate', ( data ) => {
+    if ( !isRPiDead ) {
+      evaluateEquation( client, raspberry, data );
+    }
+  } );
 } );
 
 rpi.on( 'connection', ( raspberryClient ) => {
   raspberry = raspberryClient;
+  console.log( 'rpi is alive' );
+  isRPiDead = false;
+  frontend.emit( 'service is up' );
+
   disableError();
 
   console.log( 'Raspberry connected' );
@@ -56,8 +71,26 @@ rpi.on( 'connection', ( raspberryClient ) => {
     breakQueue( frontend );
   } );
 
-  raspberry.on( 'disconnect', () => {
-    console.log( 'err' );
+  raspberry.on( 'rpi is dead', () => {
+    console.log( 'rpi is dead' );
+    isRPiDead = true;
+    frontend.emit( 'service is down' );
+  } );
+
+  raspberry.on( 'rpi is alive', () => {
+    console.log( 'rpi is alive' );
+    isRPiDead = false;
+    frontend.emit( 'service is up' );
+  } );
+
+  raspberry.on( 'disconnect', ( reason ) => {
+    console.log( reason );
+    if ( Object.keys( rpi.sockets.clients().connected ).length === 0 ) {
+      console.log( 'rpi is dead' );
+      isRPiDead = true;
+      frontend.emit( 'service is down' );
+    }
+
     breakQueue( frontend );
   } );
 } );

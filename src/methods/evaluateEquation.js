@@ -44,8 +44,12 @@ export const evaluateEquation = ( client, raspberry, equationValue ) => {
 };
 
 export const breakQueue = ( client ) => {
-  client.emit( 'evaluate error' );
+  if ( queue.length > 0 ) {
+    client.emit( 'evaluate error' );
+  }
+
   queue.shift();
+  client.emit( 'queue changed', queue );
   hasError = true;
 };
 
